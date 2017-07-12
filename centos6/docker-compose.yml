@@ -1,0 +1,10 @@
+version: '2'
+services:
+  build6:
+    build: .
+    volumes:
+      - .:/app
+      - ../builds6/RPMS:/root/rpmbuild/RPMS
+      - ../builds6/SRPMS:/root/rpmbuild/SRPMS
+      - ../SPECS:/root/rpmbuild/SPECS
+      - ../SOURCES:/root/rpmbuild/SOURCES_LOCAL

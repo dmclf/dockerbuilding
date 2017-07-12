@@ -1,0 +1,34 @@
+Summary: A general purpose cryptography library with TLS implementation
+Name: openssl-fips
+Version: 2.0.16
+Release: 1%{?dist}.centos.dockerbuildhost
+Source: https://www.openssl.org/source/openssl-fips-%{version}.tar.gz
+License: OpenSSL
+Group: System Environment/Libraries
+URL: http://www.openssl.org/
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+BuildRequires: coreutils, krb5-devel, perl, sed, zlib-devel, /usr/bin/cmp
+BuildRequires: /usr/bin/rename
+Requires: coreutils, make
+Requires: ca-certificates >= 2008-5
+
+%description
+The OpenSSL toolkit provides support for secure communications between
+machines. OpenSSL includes a certificate management tool and shared
+libraries which provide various cryptographic algorithms and
+protocols.
+
+%prep
+%setup -q -n %{name}-%{version}
+
+%build
+./config
+make all
+
+install -d $RPM_BUILD_ROOT{%{_bindir},%{_includedir},%{_libdir},%{_mandir},%{_libdir}/openssl}
+make INSTALL_PREFIX=$RPM_BUILD_ROOT install
+make install
+
+%files
+%defattr(-,root,root)
+/usr/local/ssl/fips-2.0/*

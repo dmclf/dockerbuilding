@@ -1,0 +1,10 @@
+version: '2'
+services:
+  buildc7:
+    build: .
+    volumes:
+      - .:/app
+      - ../builds7/RPMS:/root/rpmbuild/RPMS
+      - ../builds7/SRPMS:/root/rpmbuild/SRPMS
+      - ../SPECS:/root/rpmbuild/SPECS
+      - ../SOURCES:/root/rpmbuild/SOURCES_LOCAL
