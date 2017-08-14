@@ -3,19 +3,21 @@ logs=""
 
 corelogfile='/root/rpmbuild/SPECS/core_buildlog.log'
 PACKAGER="ddamen"
-v_opensslfips=2.0.16
-v_openssl=1.0.2l
-v_openssh=7.5p1
-v_nginx=1.13.3
-v_keepalived=1.3.5
-v_httpd=2.2.34
+v_opensslfips="2.0.16"
+v_openssl="1.0.2l"
+v_openssh="7.5p1"
+v_nginx="1.13.4"
+v_keepalived="1.3.5"
+v_httpd="2.2.34"
+v_bind="9.10.5-P3"
+
 
 V_OPENSSL="1:${v_openssl}-1"
 V_OPENSSH="1:${v_openssh}-1"
 ssl_before=$(`openssl version` ciphers: `openssl ciphers|tr \: "\012" | wc -l`)
 ssh_before=$(ssh -V 2>&1 | tr -d "\012")
 
-loophashes="openssl-fips:${v_opensslfips} openssl:${v_openssl} openssh:${v_openssh} nginx:${v_nginx} keepalived:${v_keepalived} httpd:${v_httpd}"
+loophashes="openssl-fips:${v_opensslfips} openssl:${v_openssl} openssh:${v_openssh} nginx:${v_nginx} keepalived:${v_keepalived} httpd:${v_httpd} bind:${v_bind}"
 
 # Create directories if not already present
 mkdir -p ~/rpmbuild/{SPECS,SOURCES} ~/rpmbuild/SPECS/done
