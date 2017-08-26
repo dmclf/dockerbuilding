@@ -2,6 +2,7 @@
 %global  nginx_user          nginx
 
 %define __packager __PACKAGER__
+%define debug_package %{nil}
 %define builtagainst_openssl_version __OPENSSLVERSION__
 
 %define module_njs_shaid             1c50334fbea6
@@ -13,7 +14,7 @@
 
 Name:              nginx
 Version:           1.13.3
-Release:           1%{?dist}
+Release:           1%{?dist}.centos.dockerbuildhost
 Packager:          %{__packager}
 
 Summary:           A high performance web server and reverse proxy server

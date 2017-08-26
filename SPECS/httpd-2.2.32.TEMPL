@@ -5,6 +5,7 @@
 %define vstring CentOS 
 %define mpms worker event
 %define __packager __PACKAGER__
+%define debug_package %{nil}
 %define builtagainst_openssl_version __OPENSSLVERSION__
 
 
@@ -142,7 +143,6 @@ the Apache HTTP Server.
 Group: System Environment/Daemons
 Summary: SSL/TLS module for the Apache HTTP Server
 Epoch: 1
-BuildRequires: openssl-devel
 Requires(post): openssl >= 0.9.7f-4, /bin/cat
 Requires(pre): httpd
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmn}
@@ -582,6 +582,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/httpd/build/*.sh
 
 %changelog
+* Wed Aug 23 2017 Diederik Damen <ddamen@noreply.github.com> -  %{version}
+- new docker building image -- docker-testing
+
 * Mon Aug 24 2016 Johnny Hughes <johnny@centos.org> - 2.2.15-47.4
 - Roll in CentOS Branding
 

@@ -1,6 +1,31 @@
 #!/bin/bash
 logs=""
 
+function createlocalrepo ()
+{
+rpmquery -a | grep -q createrepo || yum install -y createrepo
+
+cd /root/rpmbuild/RPMS/
+createrepo .
+cd -
+sleep 2
+
+if test ! -f /etc/yum.repos.d/local.repo
+then 
+cat << EOF > /etc/yum.repos.d/local.repo
+[local]
+name=Local
+baseurl=file:///root/rpmbuild/RPMS/
+enabled=1
+gpgcheck=0
+
+EOF
+fi
+}
+
+yum install -y /root/rpmbuild/SOURCES_LOCAL/epel-release-latest-6.noarch.rpm
+
+
 corelogfile='/root/rpmbuild/SPECS/core_buildlog.log'
 PACKAGER="ddamen"
 v_opensslfips="2.0.16"
@@ -9,18 +34,24 @@ v_openssh="7.5p1"
 v_nginx="1.13.4"
 v_keepalived="1.3.5"
 v_httpd="2.2.34"
-v_bind="9.10.5-P3"
-
+v_bind="9.11.2"
+v_freeradius="3.0.15"
+v_quagga="1.2.1"
+v_sudo="1.8.20p2"
+v_bash="4.4"
 
 V_OPENSSL="1:${v_openssl}-1"
 V_OPENSSH="1:${v_openssh}-1"
-ssl_before=$(`openssl version` ciphers: `openssl ciphers|tr \: "\012" | wc -l`)
+ssl_before="$(openssl version) ciphers: $(openssl ciphers|tr \: "\012" | wc -l)"
 ssh_before=$(ssh -V 2>&1 | tr -d "\012")
 
-loophashes="openssl-fips:${v_opensslfips} openssl:${v_openssl} openssh:${v_openssh} nginx:${v_nginx} keepalived:${v_keepalived} httpd:${v_httpd} bind:${v_bind}"
+loophashes="openssl-fips:${v_opensslfips} openssl:${v_openssl} sudo:${v_sudo} openssh:${v_openssh} nginx:${v_nginx} keepalived:${v_keepalived} httpd:${v_httpd} bind:${v_bind} quagga:${v_quagga} bash:${v_bash} freeradius:${v_freeradius}"
 
 # Create directories if not already present
-mkdir -p ~/rpmbuild/{SPECS,SOURCES} ~/rpmbuild/SPECS/done
+mkdir -p ~/rpmbuild/{SPECS,SOURCES,done} 
+
+createlocalrepo
+
 
 #quick loop to check for all spec files
 for hash in $loophashes
@@ -70,8 +101,8 @@ ok=1
 rm -rf /root/rpmbuild/SOURCES/*
 if test -d /root/rpmbuild/SOURCES_LOCAL/${app}
 then
-rsync -ra /root/rpmbuild/SOURCES_LOCAL/${app}/patches/ /root/rpmbuild/SOURCES/ 
-rsync -ra /root/rpmbuild/SOURCES_LOCAL/${app}/sources/ /root/rpmbuild/SOURCES/
+if test -d /root/rpmbuild/SOURCES_LOCAL/${app}/patches;then rsync -ra /root/rpmbuild/SOURCES_LOCAL/${app}/patches/ /root/rpmbuild/SOURCES/  2>/dev/null;fi
+if test -d /root/rpmbuild/SOURCES_LOCAL/${app}/sources;then rsync -ra /root/rpmbuild/SOURCES_LOCAL/${app}/sources/ /root/rpmbuild/SOURCES/  2>/dev/null;fi
 chown root:root -R ~/rpmbuild/SOURCES/
 fi
 
@@ -137,10 +168,14 @@ popd
 	;;
 esac
 
+#set -o pipefail
+yum-builddep -y $specfile 2>&1 | tee -a ~/rpmbuild/SPECS/done/${hash}.buildlog.builddep
+spectool -g -R $specfile 2>&1 | tee -a ~/rpmbuild/SPECS/done/${hash}.buildlog.spectool
+rpmbuild -bb $specfile 2>&1 | tee -a ~/rpmbuild/SPECS/done/${hash}.buildlog 
+fail=${PIPESTATUS[0]}
+#set +o pipefail
 
-spectool -g -R $specfile 2>&1 
-rpmbuild -bb $specfile 2>&1 || fail=1 | tee -a ~/rpmbuild/SPECS/done/${hash}.buildlog 
-
+echo "debug rpmbuild result: ${fail} $specfile " |tee -a ~/rpmbuild/SPECS/done/${hash}.buildlog
 if test  $fail -eq 1
 then
 echo "rpmbuild -bb $specfile" | tee -a $corelogfile
@@ -149,9 +184,13 @@ break
 exit 1
 else 
 echo "rpmbuild $specfile ok" | tee -a $corelogfile
+## repo update
+createlocalrepo
+## end of repo update
 fi
 
 
+createlocalrepo
 case "$app" in
 
 	openssl) echo "
@@ -172,16 +211,19 @@ case "$app" in
 	;;
 
 	openssl-fips)
-	yum -y install ~/rpmbuild/RPMS/x86_64/${app}*${version}*rpm | tee -a $corelogfile
+	#yum -y install ~/rpmbuild/RPMS/x86_64/${app}*${version}*rpm | tee -a $corelogfile
+	yum -y install openssl-fips | tee -a $corelogfile
 	;;
 
 	openssh)
-	yum -y install ~/rpmbuild/RPMS/x86_64/${app}*${version}*rpm | tee -a $corelogfile
+	#yum -y install ~/rpmbuild/RPMS/x86_64/${app}*${version}*rpm | tee -a $corelogfile
 	ssh -V 2>&1 | grep -i "${app}*${version}" | tee -a $corelogfile
+	yum -y install openssh | tee -a $corelogfile
 	;;
 
 	nginx)
-	yum -y install ~/rpmbuild/RPMS/x86_64/${app}*${version}*rpm | tee -a $corelogfile
+	#yum -y install ~/rpmbuild/RPMS/x86_64/${app}*${version}*rpm | tee -a $corelogfile
+	yum -y install nginx | tee -a $corelogfile
 	service nginx start && curl localhost | tee -a $corelogfile
 	;;
 
