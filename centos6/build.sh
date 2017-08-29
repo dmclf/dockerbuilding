@@ -116,7 +116,7 @@ fi
 fail=0
 case "$app" in
 	openssl) 
-	rpmquery -a | grep openssl-fips || yum -y install~/rpmbuild/RPMS/x86_64/openssl-fips*rpm || break
+	rpmquery -a | grep openssl-fips || yum -y install ~/rpmbuild/RPMS/x86_64/openssl-fips*rpm || break
 	;;
 
 	openssh)
