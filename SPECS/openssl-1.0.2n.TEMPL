@@ -1,0 +1,377 @@
+# 0.9.5a soversion = 0
+# 0.9.6  soversion = 1
+# 0.9.6a soversion = 2
+# 0.9.6c soversion = 3
+# 0.9.7a soversion = 4
+# 0.9.7ef soversion = 5
+# 0.9.8ab soversion = 6
+# 0.9.8g soversion = 7
+# 0.9.8jk + EAP-FAST soversion = 8
+# 1.0.0 soversion = 10
+%define soversion 10
+%define versionstripped 1.0.2
+%define version_appendix n
+%define obsoleteversion 1.0.2l
+
+%define __packager __PACKAGER__
+%define debug_package %{nil}
+%define builtagainst_openssh_version __OPENSSHVERSION__
+
+# Number of threads to spawn when testing some threading fixes.
+%define thread_test_threads %{?threads:%{threads}}%{!?threads:1}
+
+# Arches on which we need to prevent arch conflicts on opensslconf.h, must
+# also be handled in opensslconf-new.h.
+%define multilib_arches %{ix86} ia64 ppc ppc64 s390 s390x sparcv9 sparc64 x86_64
+
+Summary: A general purpose cryptography library with TLS implementation
+Name: openssl
+Packager:          %{__packager}
+EPOCH: 1
+Version: %{versionstripped}%{version_appendix}
+Release: 1%{?dist}.centos.dockerbuildhost
+Source: https://www.openssl.org/source/openssl-%{version}.tar.gz
+Source2: openssl/sources/Makefile.certificate
+Source6: openssl/sources/make-dummy-cert
+Source7: openssl/sources/renew-dummy-cert
+Source8: openssl/sources/openssl-thread-test.c
+#Source9: openssl/sources/opensslconf-new.h
+#Source10: openssl/sources/opensslconf-new-warning.h
+Source11: openssl/sources/README.FIPS
+Source12: openssl/sources/ec_curve.c
+Source13: openssl/sources/ectest.c
+Patch1: openssl/patches/openssl-1.0.1-beta2-rpmbuild.patch
+#Patch2: openssl/patches/openssl-1.0.0f-defaults.patch
+Patch4: openssl/patches/openssl-1.0.0-beta5-enginesdir.patch
+Patch5: openssl/patches/openssl-0.9.8a-no-rpath.patch
+#Patch6: openssl/patches/openssl-0.9.8b-test-use-localhost.patch
+Patch7: openssl/patches/openssl-1.0.0-timezone.patch
+Patch8: openssl/patches/openssl-1.0.1c-perlfind.patch
+Patch9: openssl/patches/openssl-1.0.1c-aliasing.patch
+#Patch23: openssl/patches/openssl-1.0.1c-default-paths.patch
+Patch24: openssl/patches/openssl-1.0.1e-issuer-hash.patch
+#Patch33: openssl/patches/openssl-1.0.0-beta4-ca-dir.patch
+Patch34: openssl/patches/openssl-0.9.6-x509.patch
+Patch35: openssl/patches/openssl-0.9.8j-version-add-engines.patch
+Patch45: openssl/patches/openssl-1.0.1e-env-zlib.patch
+Patch47: openssl/patches/openssl-1.0.0-beta5-readme-warning.patch
+Patch50: openssl/patches/openssl-1.0.1-beta2-dtls1-abi.patch
+Patch51: openssl/patches/openssl-1.0.1e-version.patch
+Patch60: openssl/patches/openssl-1.0.0d-apps-dgst.patch
+Patch63: openssl/patches/openssl-1.0.0d-xmpp-starttls.patch
+Patch66: openssl/patches/openssl-1.0.1-pkgconfig-krb5.patch
+Patch70: openssl/patches/openssl-1.0.1e-addecprovides.patch
+Patch77: openssl/patches/openssl-1.0.1e-weak-ciphers.patch
+
+License: OpenSSL
+Group: System Environment/Libraries
+URL: http://www.openssl.org/
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+BuildRequires: coreutils, krb5-devel, sed, zlib-devel, /usr/bin/cmp
+BuildRequires: lksctp-tools-devel
+BuildRequires: /usr/bin/rename
+BuildRequires: /usr/bin/pod2man
+#BuildRequires: perl(Test::Harness), perl(Test::More), perl(Math::BigInt)
+#BuildRequires: perl(Module::Load::Conditional)
+#BuildRequires: perl(WWW::Curl::Easy)
+Requires:  openssh >= %{builtagainst_openssh_version}
+Requires:  coreutils, make, perl-WWW-Curl
+Requires:  ca-certificates >= 2008-5
+Obsoletes: openssl < 1:%{obsoleteversion}
+# Needed obsoletes due to the base/lib subpackage split
+Obsoletes: openssl-libs < 1:%{obsoleteversion}
+Obsoletes: openssl-devel < 1:%{obsoleteversion}
+Obsoletes: openssl-static < 1:%{obsoleteversion}
+Provides: openssl-libs
+Provides: openssl-devel
+Provides: openssl-static
+#Provides: libcrypto.so.10()(64bit)
+#Provides: libcrypto.so.10(libcrypto.so.10)(64bit)
+#Provides: libcrypto.so.10(OPENSSL_1.0.1)(64bit)
+#Provides: libcrypto.so.10(OPENSSL_1.0.1_EC)(64bit)
+#Provides: libssl.so.10()(64bit)
+#Provides: libssl.so.10(libssl.so.10)(64bit)
+#Provides: libssl.so.10(OPENSSL_1.0.1)(64bit)
+#Provides: libssl.so.10(OPENSSL_1.0.1_EC)(64bit)
+
+%description
+The OpenSSL toolkit provides support for secure communications between
+machines. OpenSSL includes a certificate management tool and shared
+libraries which provide various cryptographic algorithms and
+protocols.
+
+%prep
+%setup -q -n %{name}-%{version}
+
+%patch1 -p1 -b .rpmbuild
+#%patch2 -p1 -b .defaults
+%patch4 -p1 -b .enginesdir %{?_rawbuild}
+%patch5 -p1 -b .no-rpath
+#%patch6 -p1 -b .use-localhost
+%patch7 -p1 -b .timezone
+%patch8 -p1 -b .perlfind %{?_rawbuild}
+%patch9 -p1 -b .aliasing
+#%patch23 -p1 -b .default-paths
+%patch24 -p1 -b .issuer-hash
+#%patch33 -p1 -b .ca-dir
+%patch34 -p1 -b .x509
+%patch35 -p1 -b .version-add-engines
+%patch45 -p1 -b .env-zlib
+%patch47 -p1 -b .warning
+%patch50 -p1 -b .dtls1-abi
+%patch51 -p1 -b .version
+%patch60 -p1 -b .dgst
+%patch63 -p1 -b .starttls
+%patch66 -p1 -b .krb5
+%patch70 -p1 -b .addecprovides
+%patch77 -p1 -b .weak-ciphers
+
+sed -i 's/SHLIB_VERSION_NUMBER "1.0.0"/SHLIB_VERSION_NUMBER "%{version}"/' crypto/opensslv.h
+
+# Modify the various perl scripts to reference perl in the right location.
+perl util/perlpath.pl `dirname %{__perl}`
+
+# Generate a table with the compile settings for my perusal.
+touch Makefile
+make TABLE PERL=%{__perl}
+
+
+%build
+# Figure out which flags we want to use.
+# default
+sslarch=%{_os}-%{_target_cpu}
+%ifarch %ix86
+sslarch=linux-elf
+if ! echo %{_target} | grep -q i686 ; then
+	sslflags="no-asm 386"
+fi
+%endif
+%ifarch sparcv9
+sslarch=linux-sparcv9
+sslflags=no-asm
+%endif
+%ifarch sparc64
+sslarch=linux64-sparcv9
+sslflags=no-asm
+%endif
+%ifarch alpha alphaev56 alphaev6 alphaev67
+sslarch=linux-alpha-gcc
+%endif
+%ifarch s390 sh3eb sh4eb
+sslarch="linux-generic32 -DB_ENDIAN"
+%endif
+%ifarch s390x
+sslarch="linux64-s390x"
+%endif
+%ifarch %{arm}
+sslarch=linux-armv4
+%endif
+%ifarch sh3 sh4
+sslarch=linux-generic32
+%endif
+%ifarch ppc64
+sslarch=linux-ppc64
+%endif
+
+# ia64, x86_64, ppc are OK by default
+# Configure the build tree.  Override OpenSSL defaults with known-good defaults
+# usable on all platforms.  The Configure script already knows to use -fPIC and
+# RPM_OPT_FLAGS, so we can skip specifiying them here.
+./Configure \
+	--prefix=%{_prefix} --openssldir=%{_sysconfdir}/pki/tls ${sslflags} \
+	zlib enable-camellia enable-seed enable-tlsext enable-rfc3779 \
+	enable-cms enable-md2 enable-ec2m enable-gost enable-srp \
+	enable-idea  enable-mdc2 enable-rc5 \
+	--with-krb5-flavor=MIT \
+	--with-krb5-dir=/usr shared threads  ${sslarch} %{?!nofips:fips}
+
+# Add -Wa,--noexecstack here so that libcrypto's assembler modules will be
+# marked as not requiring an executable stack.
+# Also add -DPURIFY to make using valgrind with openssl easier as we do not
+# want to depend on the uninitialized memory as a source of entropy anyway.
+RPM_OPT_FLAGS="$RPM_OPT_FLAGS -Wa,--noexecstack -DPURIFY "
+
+sed -i 's/SHLIB_VERSION_NUMBER "1.0.0"/SHLIB_VERSION_NUMBER "%{version}"/' crypto/opensslv.h
+sed -i 's/SHLIB_EXT=.so.*$/SHLIB_EXT=.so.%{version}/' Makefile
+sed -i 's/SHARED_LIBS_LINK_EXTS=.*$/SHARED_LIBS_LINK_EXTS=.so.%{version} .so .so.%{soversion}/' Makefile
+
+make depend
+make all
+
+
+# Generate hashes for the included certs.
+make rehash
+
+# Overwrite FIPS README
+cp -f %{SOURCE11} .
+
+%check
+# Verify that what was compiled actually works.
+
+LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export LD_LIBRARY_PATH
+make -C test apps tests
+%{__cc} -o openssl-thread-test \
+	`krb5-config --cflags` \
+	-I./include \
+	$RPM_OPT_FLAGS \
+	%{SOURCE8} \
+	-L. \
+	-lssl -lcrypto \
+	`krb5-config --libs` \
+	-lpthread -lz -ldl
+./openssl-thread-test --threads %{thread_test_threads}
+
+# Add generation of HMAC checksum of the final stripped library
+%define __spec_install_post \
+    %{?__debug_package:%{__debug_install_post}} \
+    %{__arch_install_post} \
+    %{__os_install_post} \
+%{nil}
+
+%define __provides_exclude_from %{_libdir}/openssl
+
+%install
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+# Install OpenSSL.
+install -d $RPM_BUILD_ROOT{%{_bindir},%{_includedir},%{_libdir},%{_mandir},%{_libdir}/openssl}
+make INSTALL_PREFIX=$RPM_BUILD_ROOT install
+make INSTALL_PREFIX=$RPM_BUILD_ROOT install_docs
+mv $RPM_BUILD_ROOT%{_libdir}/engines $RPM_BUILD_ROOT%{_libdir}/openssl
+mv $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/man/* $RPM_BUILD_ROOT%{_mandir}/
+rmdir $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/man
+## link to real so.
+
+for i in libssl libcrypto 
+do
+#helping the installer a bit
+ln -s ${i}.so $RPM_BUILD_ROOT%{_libdir}/${i}.so.%{version} ## .so.version
+ln -s ${i}.so $RPM_BUILD_ROOT%{_libdir}/${i}.so.%{versionstripped} ## .so.versionstripped
+cp -v -p %{_builddir}/%{name}-%{version}/${i}.so.%{soversion} $RPM_BUILD_ROOT%{_libdir}/ ## .so.soversion
+ls -la $RPM_BUILD_ROOT%{_libdir}/${i}*
+done
+
+# Install a makefile for generating keys and self-signed certs, and a script
+# for generating them on the fly.
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/certs
+install -m644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/certs/Makefile
+install -m755 %{SOURCE6} $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/certs/make-dummy-cert
+install -m755 %{SOURCE7} $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/certs/renew-dummy-cert
+
+# Make sure we actually include the headers we built against.
+for header in $RPM_BUILD_ROOT%{_includedir}/openssl/* ; do
+	if [ -f ${header} -a -f include/openssl/$(basename ${header}) ] ; then
+		install -m644 include/openssl/`basename ${header}` ${header}
+	fi
+done
+
+# Rename man pages so that they don't conflict with other system man pages.
+pushd $RPM_BUILD_ROOT%{_mandir}
+ln -s -f config.5 man5/openssl.cnf.5
+for manpage in man*/* ; do
+	if [ -L ${manpage} ]; then
+		TARGET=`ls -l ${manpage} | awk '{ print $NF }'`
+		ln -snf ${TARGET}ssl ${manpage}ssl
+		rm -f ${manpage}
+	else
+		mv ${manpage} ${manpage}ssl
+	fi
+done
+for conflict in passwd rand ; do
+	rename ${conflict} ssl${conflict} man*/${conflict}*
+done
+popd
+
+# Pick a CA script.
+pushd  $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/misc
+mv CA.sh CA
+popd
+
+mkdir -m755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA
+mkdir -m700 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA/private
+mkdir -m755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA/certs
+mkdir -m755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA/crl
+mkdir -m755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA/newcerts
+
+# Ensure the openssl.cnf timestamp is identical across builds to avoid
+# mulitlib conflicts and unnecessary renames on upgrade
+touch -r %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/openssl.cnf
+
+# Determine which arch opensslconf.h is going to try to #include.
+basearch=%{_arch}
+%ifarch %{ix86}
+basearch=i386
+%endif
+%ifarch sparcv9
+basearch=sparc
+%endif
+%ifarch sparc64
+basearch=sparc64
+%endif
+
+#%ifarch %{multilib_arches}
+# Do an opensslconf.h switcheroo to avoid file conflicts on systems where you
+# can have both a 32- and 64-bit version of the library, and they each need
+# their own correct-but-different versions of opensslconf.h to be usable.
+#install -m644 %{SOURCE10} \
+#	$RPM_BUILD_ROOT/%{_prefix}/include/openssl/opensslconf-${basearch}.h
+#cat $RPM_BUILD_ROOT/%{_prefix}/include/openssl/opensslconf.h >> \
+#	$RPM_BUILD_ROOT/%{_prefix}/include/openssl/opensslconf-${basearch}.h
+#install -m644 %{SOURCE9} \
+#	$RPM_BUILD_ROOT/%{_prefix}/include/openssl/opensslconf.h
+#%endif
+
+%clean
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root)
+%attr(0755,root,root) %{_libdir}/libcrypto.so.%{soversion}
+%attr(0755,root,root) %{_libdir}/libcrypto.so.%{versionstripped}
+%attr(0755,root,root) %{_libdir}/libcrypto.so.%{version}
+%attr(0755,root,root) %{_libdir}/libcrypto.so
+%attr(0755,root,root) %{_libdir}/libssl.so.%{soversion}
+%attr(0755,root,root) %{_libdir}/libssl.so.%{versionstripped}
+%attr(0755,root,root) %{_libdir}/libssl.so.%{version}
+%attr(0755,root,root) %{_libdir}/libssl.so
+%doc FAQ LICENSE CHANGES NEWS INSTALL README
+%doc doc/c-indentation.el doc/openssl.txt
+#%doc doc/openssl_button.html doc/openssl_button.gif
+%doc doc/ssleay.txt
+%doc README.FIPS
+%{_sysconfdir}/pki/tls/certs/make-dummy-cert
+%{_sysconfdir}/pki/tls/certs/renew-dummy-cert
+%{_sysconfdir}/pki/tls/certs/Makefile
+%{_sysconfdir}/pki/tls/misc/CA
+%attr(0755,root,root) %{_bindir}/openssl
+%config(noreplace) %{_sysconfdir}/pki/tls/openssl.cnf
+%dir %{_sysconfdir}/pki/CA
+%dir %{_sysconfdir}/pki/CA/private
+%dir %{_sysconfdir}/pki/CA/certs
+%dir %{_sysconfdir}/pki/CA/crl
+%dir %{_sysconfdir}/pki/CA/newcerts
+%{_sysconfdir}/pki/tls/misc/c_*
+%attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*
+%attr(0644,root,root) %{_mandir}/man5*/*
+%attr(0644,root,root) %{_mandir}/man7*/*
+%dir %{_sysconfdir}/pki/tls
+%dir %{_sysconfdir}/pki/tls/certs
+%dir %{_sysconfdir}/pki/tls/misc
+%dir %{_sysconfdir}/pki/tls/private
+%attr(0755,root,root) %{_libdir}/openssl
+%{_prefix}/include/openssl
+%attr(0644,root,root) %{_mandir}/man3*/*
+%attr(0644,root,root) %{_libdir}/pkgconfig/*.pc
+%attr(0644,root,root) %{_libdir}/*.a
+%attr(0755,root,root) %{_bindir}/c_rehash
+%attr(0644,root,root) %{_mandir}/man1*/*.pl*
+%{_sysconfdir}/pki/tls/misc/*.pl
+%{_sysconfdir}/pki/tls/misc/tsget
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%changelog
+* Fri Jun  2 2017 Diederik Damen <ddamen@noreply.github.com> 
+- new docker building image -- docker-testing
