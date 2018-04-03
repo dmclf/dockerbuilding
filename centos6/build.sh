@@ -29,8 +29,8 @@ yum install -y /root/rpmbuild/SOURCES_LOCAL/epel-release-latest-6.noarch.rpm
 corelogfile='/root/rpmbuild/SPECS/core_buildlog.log'
 PACKAGER="ddamen"
 v_opensslfips="2.0.16"
-v_openssl="1.0.2n"
-v_openssh="7.6p1"
+v_openssl="1.0.2o"
+v_openssh="7.7p1"
 v_nginx="1.13.6"
 v_keepalived="1.3.5"
 v_httpd="2.2.34"
